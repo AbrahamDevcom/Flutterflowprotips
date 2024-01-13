@@ -1,0 +1,153 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'dart:convert';
+import 'dart:async';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
+
+class CustomMap extends StatefulWidget {
+  const CustomMap({
+    Key? key,
+    this.width,
+    this.height,
+    required this.stores,
+    required this.initalPosition,
+  }) : super(key: key);
+
+  final double? width;
+  final double? height;
+  final List<ProductsRecord> stores;
+  final LatLng initalPosition;
+
+  @override
+  _CustomMapState createState() => _CustomMapState();
+}
+
+class _CustomMapState extends State<CustomMap> {
+  final Completer<gm.GoogleMapController> _controller =
+      Completer<gm.GoogleMapController>();
+  gm.BitmapDescriptor markerIcon = gm.BitmapDescriptor.defaultMarker;
+  List<gm.Marker> markerList = <gm.Marker>[];
+
+  @override
+  void initState() {
+    //addMArkers();
+    addCustomIcon();
+    super.initState();
+  }
+
+  void addCustomIcon() async {
+    markerIcon = await gm.BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(size: Size(32, 40)),
+        'assets/images/marcador.png');
+    setState(() {});
+  }
+
+  // void addMArkers() async {
+  //   BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
+  //       const ImageConfiguration(devicePixelRatio: 1.0),
+  //       "assets/images/marcador.png");
+
+  //   for (var element in widget.stores) {
+  //     Image _image = await Image.network(element.imagesList[0]);
+
+  //     // Encode the image as a list of ints
+  //     List<int> list = utf8.encode(_image.toString());
+
+  //     // Convert the int list into an unsigned 8-bit bytelist
+  //     Uint8List bytes = Uint8List.fromList(list);
+
+  //     // And construct the BitmapDescriptor from the bytelist
+  //     BitmapDescriptor _bitmapDescriptor = BitmapDescriptor.fromBytes(bytes);
+
+  //     LatLng showLocation = LatLng(
+  //         element.locationStore!.latitude, element.locationStore!.longitude);
+  //     markerList.add(
+  //       Marker(
+  //         //add first marker
+  //         markerId: MarkerId(showLocation.toString()),
+  //         position: showLocation.toGoogleMaps(), //position of marker
+
+  //         onTap: () {
+  //           context.pushNamed(
+  //             'ProductUpdate',
+  //             queryParameters: {
+  //               'productItem': serializeParam(
+  //                 element,
+  //                 ParamType.Document,
+  //               ),
+  //             }.withoutNulls,
+  //             extra: <String, dynamic>{
+  //               'productItem': element,
+  //             },
+  //           );
+  //         },
+  //         icon: _bitmapDescriptor, //Icon for Marker
+  //       ),
+  //     );
+  //   }
+  //   setState(() {});
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: true,
+      child: Stack(
+        children: [
+          Container(
+            width: widget.width,
+            height: widget.height,
+            child: gm.GoogleMap(
+              initialCameraPosition: gm.CameraPosition(
+                target: gm.LatLng(widget.initalPosition.latitude,
+                    widget.initalPosition.longitude),
+                zoom: 14.4746,
+              ),
+              markers: widget.stores.map((e) {
+                gm.LatLng showLocation = gm.LatLng(
+                    e.locationStore!.latitude, e.locationStore!.longitude);
+                return gm.Marker(
+                  //add first marker
+                  markerId: gm.MarkerId(showLocation.toString()),
+                  position: showLocation, //position of marker
+
+                  onTap: () {
+                    context.pushNamed(
+                      'ProductUpdate',
+                      queryParameters: {
+                        'productItem': serializeParam(
+                          e,
+                          ParamType.Document,
+                        ),
+                      }.withoutNulls,
+                      extra: <String, dynamic>{
+                        'productItem': e,
+                      },
+                    );
+                  },
+                  icon: markerIcon, //Icon for Marker
+                );
+              }).toSet(),
+              onMapCreated: (gm.GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Set your widget name, define your parameter, and then add the
+// boilerplate code using the green button on the right!
