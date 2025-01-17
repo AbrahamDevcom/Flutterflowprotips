@@ -1,0 +1,89 @@
+Library: 
+flutter_inappwebview: 6.1.5
+
+code:
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:collection';
+
+class PhotoboothWidget extends StatefulWidget {
+  const PhotoboothWidget({
+    super.key,
+    this.width,
+    this.height,
+    required this.initialUrl,
+  });
+
+  final double? width;
+  final double? height;
+  final String initialUrl;
+
+  @override
+  State<PhotoboothWidget> createState() => _PhotoboothWidgetState();
+}
+
+class _PhotoboothWidgetState extends State<PhotoboothWidget> {
+  InAppWebViewController? webViewController;
+  InAppWebViewSettings settings = InAppWebViewSettings(
+      isInspectable: false,
+      mediaPlaybackRequiresUserGesture: false,
+      allowsInlineMediaPlayback: true,
+      iframeAllow: "camera; microphone",
+      iframeAllowFullscreen: true);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: widget.height,
+      width: widget.width,
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            child: Container(
+              child: InAppWebView(
+                initialUrlRequest: URLRequest(url: WebUri(widget.initialUrl)),
+                // initialUrlRequest:
+                // URLRequest(url: WebUri(Uri.base.toString().replaceFirst("/#/", "/") + 'page.html')),
+                // initialFile: "assets/index.html",
+                initialUserScripts: UnmodifiableListView<UserScript>([]),
+                initialSettings: settings,
+                onWebViewCreated: (controller) async {
+                  webViewController = controller;
+                },
+                onLoadStart: (controller, url) {},
+                onPermissionRequest: (controller, request) async {
+                  return PermissionResponse(
+                      resources: request.resources,
+                      action: PermissionResponseAction.GRANT);
+                },
+                shouldOverrideUrlLoading: (controller, navigationAction) async {
+                  var uri = navigationAction.request.url!;
+
+                  if (![
+                    "http",
+                    "https",
+                    "file",
+                    "chrome",
+                    "data",
+                    "javascript",
+                    "about"
+                  ].contains(uri.scheme)) {
+                    if (await canLaunchUrl(uri)) {
+                      // Launch the App
+                      await launchUrl(
+                        uri,
+                      );
+                      // and cancel the request
+                      return NavigationActionPolicy.CANCEL;
+                    }
+                  }
+                  return NavigationActionPolicy.ALLOW;
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
